@@ -1,15 +1,23 @@
 FROM alpine:3.20
 
 RUN apk update && \
-    apk add meson git gcc g++ musl-dev pkgconfig glib-dev glib-static cmake patch make boost-dev xxd
+    apk add meson git gcc g++ musl-dev pkgconfig cmake patch make boost-dev xxd py3-packaging libffi-dev
 
-# Install lua
+# Install glib2
 RUN <<EOF
 set -e
-wget -O /usr/include/minilua.h https://raw.githubusercontent.com/edubart/minilua/v5.4.7/minilua.h
-echo '#include "minilua.h"' > /usr/include/lualib.h
-echo '#include "minilua.h"' > /usr/include/lauxlib.h
-echo '#include "minilua.h"' > /usr/include/lua.h
+git clone --branch 2.80.5 --depth 1 https://gitlab.gnome.org/GNOME/glib.git
+cd glib
+meson setup \
+    -Ddefault_library=static \
+    -Dtests=false \
+    -Dnls=disabled \
+    -Dglib_debug=disabled \
+    _build
+meson compile -C _build
+ninja -C _build install
+cd ..
+rm -rf glib
 EOF
 
 # Install libslirp
@@ -21,6 +29,15 @@ meson build -Ddefault_library=static
 ninja -C build install
 cd ..
 rm -rf libslirp
+EOF
+
+# Install lua
+RUN <<EOF
+set -e
+wget -O /usr/include/minilua.h https://raw.githubusercontent.com/edubart/minilua/v5.4.7/minilua.h
+echo '#include "minilua.h"' > /usr/include/lualib.h
+echo '#include "minilua.h"' > /usr/include/lauxlib.h
+echo '#include "minilua.h"' > /usr/include/lua.h
 EOF
 
 # Download cartesi machine
@@ -44,15 +61,14 @@ EOF
 RUN <<EOF
 set -e
 cd machine-emulator
-DYNLINKER=$(realpath /lib/libc.*)
 make -C src -j$(nproc) \
     MYLDFLAGS="-static-libstdc++ -static-libgcc" \
     MYEXELDFLAGS="-static" \
-    MYSOLDFLAGS=" -Wl,--dynamic-linker=$DYNLINKER" \
-    LIBCARTESI_COMMON_LIBS="-l:libslirp.a -l:libglib-2.0.a" \
+    LIBCARTESI_COMMON_LIBS="-l:libslirp.a -l:libglib-2.0.a -l:libintl.a" \
     JSONRPC_REMOTE_CARTESI_MACHINE_LIBS="-l:libslirp.a -l:libglib-2.0.a -l:libintl.a" \
     LUA_INC= LUA_LIB=
 make install PREFIX=/usr DESTDIR=pkg
+cp /usr/local/lib/libslirp.a /usr/local/lib/libglib-2.0.a /usr/local/lib/libintl.a pkg/usr/lib/
 EOF
 
 # Build cartesi machine cli

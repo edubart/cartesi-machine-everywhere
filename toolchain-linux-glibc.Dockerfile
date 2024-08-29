@@ -2,7 +2,7 @@ FROM ubuntu:22.04
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y git wget meson glib2.0-dev python3 glib2.0-dev xxd
+    apt-get install -y git wget meson glib2.0-dev python3 xxd
 
 # Install gcc
 RUN <<EOF
@@ -65,6 +65,7 @@ make -C src -j$(nproc) \
     SLIRP_LIB="-l:libslirp.a -l:libglib-2.0.a" \
     LUA_INC= LUA_LIB=
 make install PREFIX=/usr DESTDIR=pkg
+cp /usr/local/lib/*-linux-gnu/libslirp.a /usr/lib/*-linux-gnu/libglib-2.0.a pkg/usr/lib/
 EOF
 
 # Build cartesi machine cli
