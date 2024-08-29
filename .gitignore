@@ -1,0 +1,6 @@
+cartesi-machine-*
+*.zip
+*.xz
+*.gz
+*.ext2
+*.bin
