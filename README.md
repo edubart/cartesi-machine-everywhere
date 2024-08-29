@@ -38,12 +38,42 @@ The following platforms are supported:
 
 ### A note on Linux different flavors
 
-Notice Linux has two options for distributions based on different libc,
-one based on GLIBC 2.35+ and other based on MUSL.
+Linux has two flavors for distributions based on different libc:
+
+1. Based on GLIBC 2.35+ libc
+2. Based on MUSL libc
+
 You most likely you want to use the GLIBC libc (eg. Ubuntu/Debian/ArchLinux/...).
 Unless you are using a system based on MUSL libc (eg. Alpine Linux),
 or really want a statically linked `cartesi-machine` binary so it can run
 even on very outdated Linux distributions.
+When downloading the MUSL flavor the cli will work on any Linux,
+however the shared libraries will not, unless your system have MUSL libc.
+
+## Quick example
+
+Here is a quick example of running `cartesi-machine` on any Linux amd64.
+```
+wget https://github.com/edubart/cartesi-machine-everywhere/releases/latest/download/cartesi-machine-linux-musl-amd64.tar.xz
+tar xJf cartesi-machine-linux-musl-amd64.tar.xz
+export CARTESI_IMAGES_PATH=$(pwd)/cartesi-machine-linux-musl-amd64/share/cartesi-machine/images
+./cartesi-machine-linux-musl-amd64/bin/cartesi-machine
+
+         .
+        / \
+      /    \
+\---/---\  /----\
+ \       X       \
+  \----/  \---/---\
+       \    / CARTESI
+        \ /   MACHINE
+         '
+
+Nothing to do.
+
+Halted
+Cycles: 42051629
+```
 
 ## Using the cartesi-machine cli
 
@@ -57,7 +87,7 @@ even on very outdated Linux distributions.
 2. Extract the archive.
 3. Compile your application using `lib` library directory and `include` directory while linking to `libcartesi` and you are done!
 
-**Remarks:** For linking dynamically use `-lcartesi` flag, for linking statically use `lib/libcartesi.a` flag.
+**Remarks:** For linking dynamically add `-lcartesi` linker flag, for linking statically add the full path to `lib/libcartesi.a` as a linker flag.
 
 ## Using the cartesi Lua library
 
