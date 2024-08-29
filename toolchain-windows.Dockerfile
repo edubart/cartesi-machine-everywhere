@@ -22,11 +22,7 @@ make bundle-boost
 wget https://github.com/cartesi/machine-emulator/releases/download/v0.18.1/add-generated-files.diff
 patch -Np0 < add-generated-files.diff
 
-# fix/alpine-compile
-wget https://github.com/cartesi/machine-emulator/pull/267.patch
-patch -Np1 < 267.patch
-
-# feature/windows-virtio-9p
+# feature/windows-virtio-9p (includes feature/optim-fetch)
 wget https://github.com/cartesi/machine-emulator/pull/242.patch
 patch -Np1 < 242.patch
 EOF
@@ -36,7 +32,7 @@ RUN <<EOF
 set -e
 cd machine-emulator
 make -C src -j$(nproc) \
-    libcartesi.dll libcartesi.a libluacartesi.a cartesi.so \
+    libcartesi.dll libcartesi.a libluacartesi.a \
     TARGET_OS=Windows \
     SO_EXT=dll \
     CC=x86_64-w64-mingw32-gcc \
@@ -48,9 +44,8 @@ make -C src -j$(nproc) \
 make install-headers DESTDIR=pkg
 mkdir -p pkg/usr/lib/lua/5.4
 cp src/libcartesi.dll src/libcartesi.a src/libluacartesi.a pkg/usr/lib/
-cp src/cartesi.so pkg/usr/lib/lua/5.4/cartesi.dll
 x86_64-w64-mingw32-strip -S pkg/usr/lib/*.a
-x86_64-w64-mingw32-strip -S -x pkg/usr/lib/*.dll pkg/usr/lib/lua/5.4/cartesi.dll
+x86_64-w64-mingw32-strip -S -x pkg/usr/lib/*.dll
 EOF
 
 # Build cartesi machine cli

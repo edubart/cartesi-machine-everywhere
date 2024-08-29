@@ -94,3 +94,6 @@ clean:
 
 distclean: clean
 	rm -f linux-*.bin rootfs-*.ext2
+
+clean-docker-images:
+	docker rmi $(shell docker images | grep cmdist/toolchain | awk '{print $1}')

@@ -15,7 +15,7 @@ EOF
 # Install libslirp
 RUN <<EOF
 set -e
-git clone --branch v4.7.0 --depth 1 https://gitlab.freedesktop.org/slirp/libslirp.git
+git clone --branch v4.8.0 --depth 1 https://gitlab.freedesktop.org/slirp/libslirp.git
 cd libslirp
 meson build -Ddefault_library=static
 ninja -C build install
@@ -44,9 +44,11 @@ EOF
 RUN <<EOF
 set -e
 cd machine-emulator
+DYNLINKER=$(realpath /lib/libc.*)
 make -C src -j$(nproc) \
     MYLDFLAGS="-static-libstdc++ -static-libgcc" \
     MYEXELDFLAGS="-static" \
+    MYSOLDFLAGS=" -Wl,--dynamic-linker=$DYNLINKER" \
     LIBCARTESI_COMMON_LIBS="-l:libslirp.a -l:libglib-2.0.a" \
     JSONRPC_REMOTE_CARTESI_MACHINE_LIBS="-l:libslirp.a -l:libglib-2.0.a -l:libintl.a" \
     LUA_INC= LUA_LIB=

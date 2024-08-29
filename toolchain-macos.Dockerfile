@@ -16,10 +16,6 @@ make bundle-boost
 wget https://github.com/cartesi/machine-emulator/releases/download/v0.18.1/add-generated-files.diff
 patch -Np0 < add-generated-files.diff
 
-# fix/alpine-compile
-wget https://github.com/cartesi/machine-emulator/pull/267.patch
-patch -Np1 < 267.patch
-
 # feature/optim-fetch
 wget https://github.com/cartesi/machine-emulator/pull/226.patch
 patch -Np1 < 226.patch

@@ -20,9 +20,9 @@ Each archive provides the following binaries:
 - `libcartesi`/`libcartesi_jsonrpc` headers so you can use the cartesi machine C API directly.
 - `libcartesi`/`libcartesi_jsonrpc` shared libraries, so you can link applications using the C API dynamically.
 - `libcartesi`/`libcartesi_jsonrpc` static libraries, so you can link applications using the C API statically.
-- `cartesi` Lua 5.4 library, so you can prototype applications using your system's Lua interpreter.
-- `linux.bin` standard cartesi machine kernel.
-- `rootfs.ext2` standard Ubuntu riscv64 OS containing cartesi machine tools, so you can test quickly.
+- `cartesi`/`cartesi.jsonrpc` Lua 5.4 library, so you can prototype applications using your system's Lua interpreter.
+- `linux.bin` kernel to be used by cartesi machine guests.
+- `rootfs.ext2` OS image based on Ubuntu riscv64, containing cartesi machine tools, so you can test quickly.
 
 Although all these components could be split across archives,
 they are all provided in a single archive for convenience.
@@ -31,7 +31,8 @@ they are all provided in a single archive for convenience.
 
 The following platforms are supported:
 
-- Linux (amd64/arm64/riscv64) (GLIBC 2.35+ / MUSL)
+- Linux GLIBC 2.35+ (amd64/arm64/riscv64)
+- Linux MUSL (amd64/arm64/riscv64)
 - MacOS (amd64/arm64)
 - Windows (amd64)
 - WebAssembly (so you can use in Web frontends with Emscripten)
@@ -50,14 +51,20 @@ even on very outdated Linux distributions.
 When downloading the MUSL flavor the cli will work on any Linux,
 however the shared libraries will not, unless your system have MUSL libc.
 
-## Quick example
+## Using the cartesi-machine cli
 
-Here is a quick example of running `cartesi-machine` on any Linux amd64.
-```
+1. Go to latest release page and download the archive for your host platform.
+2. Extract the archive.
+3. Run `bin/cartesi-machine` and you are done!
+
+Quick example of running `cartesi-machine` on any Linux amd64:
+
+```sh
 wget https://github.com/edubart/cartesi-machine-everywhere/releases/latest/download/cartesi-machine-linux-musl-amd64.tar.xz
 tar xJf cartesi-machine-linux-musl-amd64.tar.xz
-export CARTESI_IMAGES_PATH=$(pwd)/cartesi-machine-linux-musl-amd64/share/cartesi-machine/images
-./cartesi-machine-linux-musl-amd64/bin/cartesi-machine
+cd cartesi-machine-linux-musl-amd64
+export CARTESI_IMAGES_PATH="$(pwd)/share/cartesi-machine/images"
+./bin/cartesi-machine
 
          .
         / \
@@ -75,11 +82,23 @@ Halted
 Cycles: 42051629
 ```
 
-## Using the cartesi-machine cli
+## Using the cartesi Lua library
 
-1. Go to latest release page and download the archive for your host platform.
+1. Go to the latest release page and download the archive for your host platform.
 2. Extract the archive.
-3. Run `bin/cartesi-machine` and you are done!
+3. Update `LUA_CPATH_5_4` environment variables to search for libraries in `lib/lua/5.4`.
+4. Install Lua 5.4 in your system and you are done!
+
+Example of Lua cartesi library usage on Linux GLIBC amd64:
+
+```sh
+wget https://github.com/edubart/cartesi-machine-everywhere/releases/latest/download/cartesi-machine-linux-glibc-amd64.tar.xz
+tar xJf cartesi-machine-linux-glibc-amd64.tar.xz
+cd cartesi-machine-linux-glibc-amd64
+export LUA_CPATH_5_4="$(pwd)/lib/lua/5.4/?.so;;"
+lua5.4 -e 'print("cartesi-machine "..require("cartesi").VERSION)'
+cartesi-machine 0.18.1
+```
 
 ## Using the libcartesi C API
 
@@ -89,12 +108,23 @@ Cycles: 42051629
 
 **Remarks:** For linking dynamically add `-lcartesi` linker flag, for linking statically add the full path to `lib/libcartesi.a` as a linker flag.
 
-## Using the cartesi Lua library
+Quick example of libcartesi C API usage on any Linux GLIBC amd64:
 
-1. Go to the latest release page and download the archive for your host platform.
-2. Extract the archive.
-3. Update `LUA_CPATH_5_4` environment variables to search for libraries in `lib/lua/5.4`.
-4. Install Lua 5.4 in your system and you are done!
+```sh
+wget https://github.com/edubart/cartesi-machine-everywhere/releases/latest/download/cartesi-machine-linux-glibc-amd64.tar.xz
+tar xJf cartesi-machine-linux-glibc-amd64.tar.xz
+cd cartesi-machine-linux-glibc-amd64
+cat <<EOF > main.c
+#include <stdio.h>
+#include <cartesi-machine/machine-c-api.h>
+int main() {
+     printf("register x1 is at 0x%x\n", cm_get_x_address(1));
+}
+EOF
+gcc main.c -o main -I./include -L./lib -lcartesi
+./main
+register x1 is at 0x8
+```
 
 ## Patches
 
@@ -102,7 +132,7 @@ At the moment this project does not use standard cartesi machine sources,
 it is based on cartesi machine v0.18.1 plus various patches to make this project possible:
 
 - Makefile adjustments so this project can exist.
-- Add VirtIO support for windows
+- Add VirtIO support for Windows
 - Instruction fetch optimization
 - Fix compile errors for some platforms
 

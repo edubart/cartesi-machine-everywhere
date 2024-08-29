@@ -27,7 +27,7 @@ EOF
 # Install libslirp
 RUN <<EOF
 set -e
-git clone --branch v4.7.0 --depth 1 https://gitlab.freedesktop.org/slirp/libslirp.git
+git clone --branch v4.8.0 --depth 1 https://gitlab.freedesktop.org/slirp/libslirp.git
 cd libslirp
 meson build -Ddefault_library=static
 ninja -C build install
@@ -50,10 +50,6 @@ cd machine-emulator
 make bundle-boost
 wget https://github.com/cartesi/machine-emulator/releases/download/v0.18.1/add-generated-files.diff
 patch -Np0 < add-generated-files.diff
-
-# fix/alpine-compile
-wget https://github.com/cartesi/machine-emulator/pull/267.patch
-patch -Np1 < 267.patch
 
 # feature/optim-fetch
 wget https://github.com/cartesi/machine-emulator/pull/226.patch
