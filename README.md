@@ -63,7 +63,6 @@ Quick example of running `cartesi-machine` on any Linux amd64:
 wget https://github.com/edubart/cartesi-machine-everywhere/releases/latest/download/cartesi-machine-linux-musl-amd64.tar.xz
 tar xJf cartesi-machine-linux-musl-amd64.tar.xz
 cd cartesi-machine-linux-musl-amd64
-export CARTESI_IMAGES_PATH="$(pwd)/share/cartesi-machine/images"
 ./bin/cartesi-machine
 
          .

@@ -55,11 +55,12 @@ set -e
 cd machine-emulator
 make -C src/cli -j$(nproc) \
     TARGET_OS=Windows \
+    TABGET_LIBS="-lshlwapi -lws2_32" \
     CC=x86_64-w64-mingw32-gcc \
     CXX=x86_64-w64-mingw32-g++ \
     LDFLAGS= \
     MYCFLAGS=-DNO_JSONRPC \
-    MYLDFLAGS="-static-libstdc++ -static-libgcc -lws2_32" \
+    MYLDFLAGS="-static-libstdc++ -static-libgcc" \
     CARTESI_LIBS="../libluacartesi.a ../libcartesi.a" \
     SLIRP_LIB=
 mkdir -p pkg/usr/bin

@@ -19,7 +19,7 @@ windows: cartesi-machine-windows-amd64
 wasm: cartesi-machine-wasm
 
 # Linux GLIBC
-cartesi-machine-linux-glibc-%: toolchain-linux-glibc.Dockerfile $(LINUX_BIN) $(ROOTFS_EXT2)
+cartesi-machine-linux-glibc-%: toolchain-linux-glibc.Dockerfile cli/* $(LINUX_BIN) $(ROOTFS_EXT2)
 	rm -rf $@ $@.tar.xz
 	docker build --tag cmdist/toolchain-$@ --file $< --progress plain --platform linux/$* .
 	docker create --platform=linux/$* --name cmdist-$@-copy cmdist/toolchain-$@
@@ -33,7 +33,7 @@ cartesi-machine-linux-glibc-%: toolchain-linux-glibc.Dockerfile $(LINUX_BIN) $(R
 	tar cf - $@ | xz -z - > $@.tar.xz
 
 # Linux MUSL
-cartesi-machine-linux-musl-%: toolchain-linux-musl.Dockerfile $(LINUX_BIN) $(ROOTFS_EXT2)
+cartesi-machine-linux-musl-%: toolchain-linux-musl.Dockerfile cli/* $(LINUX_BIN) $(ROOTFS_EXT2)
 	rm -rf $@ $@.tar.xz
 	docker build --tag cmdist/toolchain-$@ --file $< --progress plain --platform linux/$* .
 	docker create --platform=linux/$* --name cmdist-$@-copy cmdist/toolchain-$@
@@ -49,7 +49,7 @@ cartesi-machine-linux-musl-%: toolchain-linux-musl.Dockerfile $(LINUX_BIN) $(ROO
 # MacOS
 cartesi-machine-macos-amd64: CC_PREFIX=o64
 cartesi-machine-macos-arm64: CC_PREFIX=oa64
-cartesi-machine-macos-%: toolchain-macos.Dockerfile $(LINUX_BIN) $(ROOTFS_EXT2)
+cartesi-machine-macos-%: toolchain-macos.Dockerfile cli/* $(LINUX_BIN) $(ROOTFS_EXT2)
 	rm -rf $@ $@.tar.gz
 	docker build --tag cmdist/toolchain-$@ --file $< --progress plain --build-arg CC_PREFIX=$(CC_PREFIX) .
 	docker create --name cmdist-$@-copy cmdist/toolchain-$@
@@ -63,7 +63,7 @@ cartesi-machine-macos-%: toolchain-macos.Dockerfile $(LINUX_BIN) $(ROOTFS_EXT2)
 	tar cf - $@ | pigz -9 - > $@.tar.gz
 
 # Windows
-cartesi-machine-windows-%: toolchain-windows.Dockerfile $(LINUX_BIN) $(ROOTFS_EXT2)
+cartesi-machine-windows-%: toolchain-windows.Dockerfile cli/* $(LINUX_BIN) $(ROOTFS_EXT2)
 	rm -rf $@ $@.zip
 	docker build --tag cmdist/toolchain-$@ --file $< --progress plain .
 	docker create --name cmdist-$@-copy cmdist/toolchain-$@
@@ -76,7 +76,7 @@ cartesi-machine-windows-%: toolchain-windows.Dockerfile $(LINUX_BIN) $(ROOTFS_EX
 	zip -q9r $@.zip $@
 
 # WebAssembly
-cartesi-machine-wasm: toolchain-wasm.Dockerfile $(LINUX_BIN) $(ROOTFS_EXT2)
+cartesi-machine-wasm: toolchain-wasm.Dockerfile cli/* $(LINUX_BIN) $(ROOTFS_EXT2)
 	rm -rf $@ $@.tar.xz
 	docker build --tag cmdist/toolchain-$@ --file $< --progress plain .
 	docker create --name cmdist-$@-copy cmdist/toolchain-$@

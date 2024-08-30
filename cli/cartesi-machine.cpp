@@ -1,11 +1,46 @@
-#include <minilua.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <signal.h>
+#include <string.h>
+
+#include <lualib.h>
+#include <lauxlib.h>
+#include <lua.h>
+
 #include "cartesi-gdbstub.lua.h"
 #include "cartesi-machine.lua.h"
 #include "cartesi-proof.lua.h"
 #include "cartesi-util.lua.h"
 
-#include <signal.h>
-#include <stdlib.h>
+#define MAX_PATH_LEN 4096
+#ifdef _WIN32
+#include <windows.h>
+#include <shlwapi.h>
+#define PATH_SEP "\\"
+#define JOIN_IMAGES_PATH "/../share/cartesi-machine/images"
+int setenv(const char *name, const char *value, int overwrite) {
+  if (getenv(name)) {
+    return -1;
+  }
+  char tmp[4096];
+  snprintf(tmp, sizeof(tmp), "%s=%s", name, value);
+  return _putenv(tmp);
+}
+char *dirname(char *path) {
+  PathRemoveFileSpecA(path);
+  return path;
+}
+#else
+#include <unistd.h>
+#include <libgen.h>
+#define PATH_SEP "/"
+#endif
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
+
+extern "C" int luaopen_cartesi(lua_State *L);
+extern "C" int luaopen_cartesi_jsonrpc(lua_State *L);
 
 static lua_State *globalL = NULL;
 
@@ -17,7 +52,7 @@ static lua_State *globalL = NULL;
 ** other arguments (before the script name) go to negative indices.
 */
 static void createargtable(lua_State *L, char **argv, int argc) {
-  int i, narg;
+  int i;
   lua_createtable(L, argc, argc);
   for (i = 0; i < argc; i++) {
     lua_pushstring(L, argv[i]);
@@ -113,6 +148,9 @@ static int report (lua_State *L, int status) {
   return EXIT_SUCCESS;
 }
 
+/*
+** Set package.loaded[name] to the top value on the stack.
+*/
 static void setpackageloaded (lua_State *L, const char *name) {
   lua_getglobal(L, "package");
   lua_getfield(L, -1, "loaded");
@@ -122,30 +160,65 @@ static void setpackageloaded (lua_State *L, const char *name) {
   lua_pop(L, 1);
 }
 
+/*
+** Load a buffer and call it
+*/
 static int dobuffercall (lua_State *L, unsigned char *buf, unsigned int len, const char *name, int nrets) {
   int status = luaL_loadbuffer(L, reinterpret_cast<const char*>(buf), len, name);
-  if (status != LUA_OK) {
-      return status;
+  if (status == LUA_OK) {
+    status = docall(L, 0, nrets);
   }
-  return docall(L, 0, nrets);
-}
-
-static int dobufferloadpackage (lua_State *L, unsigned char *buf, unsigned int len, const char *name, const char *pkgname) {
-  int status = dobuffercall(L, buf, len, name, 1);
-  if (status != LUA_OK) {
-    return status;
-  }
-  setpackageloaded(L, pkgname);
   return status;
 }
 
-extern "C" int luaopen_cartesi(lua_State *L);
+/*
+** Load a buffer, call it and set package.loaded[pkgname] to the returning value.
+*/
+static int dobufferloadpackage (lua_State *L, unsigned char *buf, unsigned int len, const char *name, const char *pkgname) {
+  int status = dobuffercall(L, buf, len, name, 1);
+  if (status == LUA_OK) {
+    setpackageloaded(L, pkgname);
+  }
+  return status;
+}
 
-#ifndef NO_JSONRPC
-extern "C" int luaopen_cartesi_jsonrpc(lua_State *L);
+/*
+** Get current executable path.
+*/
+static size_t getexepath(char *path, size_t maxlen) {
+  memset(path, 0, MAX_PATH_LEN);
+#ifdef _WIN32
+  GetModuleFileNameA(NULL, path, maxlen);
+#elif __APPLE__
+  uint32_t size = maxlen;
+  _NSGetExecutablePath(path, &size);
+#elif __linux
+  if (readlink("/proc/self/exe", path, maxlen) < 0) {
+    return -1;
+  }
 #endif
+  return strnlen(path, maxlen);
+}
+
+/*
+** Initialize CARTESI_IMAGES_PATH if unset.
+*/
+static void initimagespath() {
+  char exepath[MAX_PATH_LEN];
+  memset(exepath, 0, MAX_PATH_LEN);
+  if (getexepath(exepath, MAX_PATH_LEN) <= 0) {
+    return;
+  }
+  char imagespath[MAX_PATH_LEN];
+  memset(imagespath, 0, MAX_PATH_LEN);
+  strncpy(imagespath, dirname(dirname(exepath)), MAX_PATH_LEN - 1);
+  strncat(imagespath, PATH_SEP "share" PATH_SEP "cartesi-machine" PATH_SEP "images", MAX_PATH_LEN - strnlen(imagespath, MAX_PATH_LEN) - 1);
+  setenv("CARTESI_IMAGES_PATH", imagespath, 0);
+}
 
 int main(int argc, char **argv) {
+  // set CARTESI_IMAGES_PATH if unset
+  initimagespath();
   // initialize Lua
   int status = 0;
   lua_State *L = luaL_newstate();
