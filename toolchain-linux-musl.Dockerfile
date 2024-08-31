@@ -8,13 +8,13 @@ RUN <<EOF
 set -e
 git clone --branch 2.80.5 --depth 1 https://gitlab.gnome.org/GNOME/glib.git
 cd glib
-meson setup \
-    -Ddefault_library=static \
+meson \
+    --default-library=static \
     -Dtests=false \
     -Dnls=disabled \
     -Dglib_debug=disabled \
     _build
-meson compile -C _build
+ninja -C _build
 ninja -C _build install
 cd ..
 rm -rf glib
@@ -25,8 +25,11 @@ RUN <<EOF
 set -e
 git clone --branch v4.8.0 --depth 1 https://gitlab.freedesktop.org/slirp/libslirp.git
 cd libslirp
-meson build -Ddefault_library=static
-ninja -C build install
+meson \
+    --default-library=static \
+    _build
+ninja -C _build
+ninja -C _build install
 cd ..
 rm -rf libslirp
 EOF
@@ -47,10 +50,6 @@ git clone --branch feature/portable-cli --depth 1 https://github.com/cartesi/mac
 cd machine-emulator
 wget https://github.com/cartesi/machine-emulator/releases/download/v0.18.1/add-generated-files.diff
 patch -Np0 < add-generated-files.diff
-
-# fix/alpine-compile
-wget https://github.com/cartesi/machine-emulator/pull/267.patch
-patch -Np1 < 267.patch
 
 # feature/optim-fetch
 wget https://github.com/cartesi/machine-emulator/pull/226.patch

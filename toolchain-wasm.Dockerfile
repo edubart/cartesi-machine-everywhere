@@ -31,10 +31,6 @@ patch -Np0 < add-generated-files.diff
 wget https://github.com/cartesi/machine-emulator/pull/226.patch
 patch -Np1 < 226.patch
 
-# fix/alpine-compile
-wget https://github.com/cartesi/machine-emulator/pull/267.patch
-patch -Np1 < 267.patch
-
 EOF
 
 # Build cartesi machine

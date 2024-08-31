@@ -6,7 +6,7 @@ by providing ready to use prebuilt binaries for various platforms and architectu
 
 Just grab and run no matter what host you are running on!
 
-The archives are designed to be dependency free, it will not need anything installed in your host system. Notably you don't need Lua to run anything, since the `cartesi-machine` becomes an executable binary.
+The archives are designed to be dependency free, it will not much installed in your host system. Notably you don't need Lua to run anything, since the `cartesi-machine` becomes an executable binary.
 
 The goal is to make it easy for anyone to hack applications using the cartesi machine,
 no matter if you want to use just the cli, its C API, script with Lua, or build other statically linked binaries on top.
@@ -131,8 +131,7 @@ At the moment this project does not use standard cartesi machine sources,
 it is based on cartesi machine v0.18.1 plus various patches to make this project possible:
 
 - Makefile adjustments so this project can exist.
-- Add VirtIO support for Windows
-- Instruction fetch optimization
-- Fix compile errors for some platforms
+- Add VirtIO support for Windows.
+- Instruction fetch optimization.
 
 The idea is to upstream these patches in the future.
