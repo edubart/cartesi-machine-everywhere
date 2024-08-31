@@ -2,7 +2,7 @@ FROM ubuntu:22.04
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y git wget meson glib2.0-dev python3 xxd
+    apt-get install -y git wget xxd gcc g++ make patch
 
 # Install gcc
 RUN <<EOF
@@ -15,6 +15,16 @@ update-alternatives --install /usr/bin/cpp cpp /usr/bin/cpp-12 12
 update-alternatives --install /usr/bin/gcc-ar gcc-ar /usr/bin/gcc-ar-12 12
 EOF
 
+# Install libslirp
+RUN <<EOF
+set -e
+git clone --branch v4.8.0-1 --depth 1 https://github.com/edubart/minislirp.git
+cd minislirp
+make -C src install
+cd ..
+rm -rf minislirp
+EOF
+
 # Install lua
 RUN <<EOF
 set -e
@@ -22,17 +32,6 @@ wget -O /usr/include/minilua.h https://raw.githubusercontent.com/edubart/minilua
 echo '#include "minilua.h"' > /usr/include/lualib.h
 echo '#include "minilua.h"' > /usr/include/lauxlib.h
 echo '#include "minilua.h"' > /usr/include/lua.h
-EOF
-
-# Install libslirp
-RUN <<EOF
-set -e
-git clone --branch v4.8.0 --depth 1 https://gitlab.freedesktop.org/slirp/libslirp.git
-cd libslirp
-meson build -Ddefault_library=static
-ninja -C build install
-cd ..
-rm -rf libslirp
 EOF
 
 # Install arc4random so we can avoid arc4random@GLIBC_2.36
@@ -62,10 +61,9 @@ set -e
 cd machine-emulator
 make -C src -j$(nproc) \
     MYLDFLAGS="-static-libstdc++ -static-libgcc /usr/lib/arc4random.o" \
-    SLIRP_LIB="-l:libslirp.a -l:libglib-2.0.a" \
     LUA_INC= LUA_LIB=
 make install PREFIX=/usr DESTDIR=pkg
-cp /usr/local/lib/*-linux-gnu/libslirp.a /usr/lib/*-linux-gnu/libglib-2.0.a pkg/usr/lib/
+cp /usr/local/lib/libslirp.a pkg/usr/lib/
 EOF
 
 # Build cartesi machine cli
@@ -74,8 +72,7 @@ RUN <<EOF
 set -e
 cd machine-emulator
 make -C src/cli -j$(nproc) \
-    MYLDFLAGS="-static-libstdc++ -static-libgcc /usr/lib/arc4random.o" \
-    SLIRP_LIB="-l:libslirp.a -l:libglib-2.0.a"
+    MYLDFLAGS="-static-libstdc++ -static-libgcc /usr/lib/arc4random.o"
 rm -r pkg/usr/share/lua pkg/usr/share/cartesi-machine/gdb \
     pkg/usr/bin/cartesi-machine-stored-hash \
     pkg/usr/bin/merkle-tree-hash

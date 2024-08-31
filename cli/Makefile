@@ -7,17 +7,17 @@ ifeq ($(TARGET_OS),Darwin)
 CC=clang
 CXX=clang++
 LDFLAGS=-Wl,-export_dynamic
-TABGET_LIBS=
+TARGET_LIBS=
 SLIRP_LIB=-lslirp
 else
 CC=gcc
 CXX=g++
 LDFLAGS=-Wl,--export-dynamic
-TABGET_LIBS=-lm
+TARGET_LIBS=-lm
 SLIRP_LIB=-lslirp
 endif
 
-LIBS=$(CARTESI_LIBS) $(SLIRP_LIB) $(TABGET_LIBS)
+LIBS=$(CARTESI_LIBS) $(SLIRP_LIB) $(TARGET_LIBS)
 
 all: $(EXE)
 

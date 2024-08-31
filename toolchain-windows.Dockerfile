@@ -2,7 +2,19 @@ FROM archlinux:base-devel
 
 # Install build tools
 RUN pacman -Syyu --noconfirm && \
-    pacman -S --noconfirm git wget mingw-w64-toolchain vim
+    pacman -S --noconfirm git wget vim mingw-w64-toolchain
+
+# Install libslirp
+RUN <<EOF
+set -e
+git clone --branch v4.8.0-1 --depth 1 https://github.com/edubart/minislirp.git
+cd minislirp
+make -C src install \
+    PREFIX=/usr/x86_64-w64-mingw32 \
+    CC=x86_64-w64-mingw32-gcc
+cd ..
+rm -rf minislirp
+EOF
 
 # Install lua
 RUN <<EOF
@@ -38,12 +50,12 @@ make -C src -j$(nproc) \
     CC=x86_64-w64-mingw32-gcc \
     CXX=x86_64-w64-mingw32-g++ \
     AR="x86_64-w64-mingw32-ar rcs" \
-    MYLDFLAGS="-static-libstdc++ -static-libgcc -lws2_32" \
-    LUA_INC= \
-    slirp=no
+    MYLDFLAGS="-static-libstdc++ -static-libgcc -lws2_32 -liphlpapi" \
+    LUA_INC= LUA_LIB=
 make install-headers DESTDIR=pkg
 mkdir -p pkg/usr/lib/lua/5.4
 cp src/libcartesi.dll src/libcartesi.a src/libluacartesi.a pkg/usr/lib/
+cp /usr/x86_64-w64-mingw32/lib/libslirp.a pkg/usr/lib/
 x86_64-w64-mingw32-strip -S pkg/usr/lib/*.a
 x86_64-w64-mingw32-strip -S -x pkg/usr/lib/*.dll
 EOF
@@ -55,14 +67,13 @@ set -e
 cd machine-emulator
 make -C src/cli -j$(nproc) \
     TARGET_OS=Windows \
-    TABGET_LIBS="-lshlwapi -lws2_32" \
+    TARGET_LIBS="-lshlwapi -lws2_32 -liphlpapi" \
     CC=x86_64-w64-mingw32-gcc \
     CXX=x86_64-w64-mingw32-g++ \
     LDFLAGS= \
     MYCFLAGS=-DNO_JSONRPC \
     MYLDFLAGS="-static-libstdc++ -static-libgcc" \
-    CARTESI_LIBS="../libluacartesi.a ../libcartesi.a" \
-    SLIRP_LIB=
+    CARTESI_LIBS="../libluacartesi.a ../libcartesi.a"
 mkdir -p pkg/usr/bin
 cp src/cli/cartesi-machine.exe pkg/usr/bin/
 x86_64-w64-mingw32-strip pkg/usr/bin/cartesi-machine.exe

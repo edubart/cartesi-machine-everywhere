@@ -1,37 +1,16 @@
 FROM alpine:3.20
 
 RUN apk update && \
-    apk add meson git gcc g++ musl-dev pkgconfig cmake patch make boost-dev xxd py3-packaging libffi-dev
-
-# Install glib2
-RUN <<EOF
-set -e
-git clone --branch 2.80.5 --depth 1 https://gitlab.gnome.org/GNOME/glib.git
-cd glib
-meson \
-    --default-library=static \
-    -Dtests=false \
-    -Dnls=disabled \
-    -Dglib_debug=disabled \
-    _build
-ninja -C _build
-ninja -C _build install
-cd ..
-rm -rf glib
-EOF
+    apk add git gcc g++ musl-dev patch make boost-dev xxd
 
 # Install libslirp
 RUN <<EOF
 set -e
-git clone --branch v4.8.0 --depth 1 https://gitlab.freedesktop.org/slirp/libslirp.git
-cd libslirp
-meson \
-    --default-library=static \
-    _build
-ninja -C _build
-ninja -C _build install
+git clone --branch v4.8.0-1 --depth 1 https://github.com/edubart/minislirp.git
+cd minislirp
+make -C src install
 cd ..
-rm -rf libslirp
+rm -rf minislirp
 EOF
 
 # Install lua
@@ -63,11 +42,9 @@ cd machine-emulator
 make -C src -j$(nproc) \
     MYLDFLAGS="-static-libstdc++ -static-libgcc" \
     MYEXELDFLAGS="-static" \
-    LIBCARTESI_COMMON_LIBS="-l:libslirp.a -l:libglib-2.0.a -l:libintl.a" \
-    JSONRPC_REMOTE_CARTESI_MACHINE_LIBS="-l:libslirp.a -l:libglib-2.0.a -l:libintl.a" \
     LUA_INC= LUA_LIB=
 make install PREFIX=/usr DESTDIR=pkg
-cp /usr/local/lib/libslirp.a /usr/local/lib/libglib-2.0.a /usr/local/lib/libintl.a pkg/usr/lib/
+cp /usr/local/lib/libslirp.a pkg/usr/lib/
 EOF
 
 # Build cartesi machine cli
@@ -76,8 +53,7 @@ RUN <<EOF
 set -e
 cd machine-emulator
 make -C src/cli -j$(nproc) \
-    MYLDFLAGS="-static-libstdc++ -static-libgcc -static" \
-    SLIRP_LIB="-l:libslirp.a -l:libglib-2.0.a -l:libintl.a"
+    MYLDFLAGS="-static-libstdc++ -static-libgcc -static"
 rm -r pkg/usr/share/lua pkg/usr/share/cartesi-machine/gdb \
     pkg/usr/bin/cartesi-machine-stored-hash \
     pkg/usr/bin/merkle-tree-hash
