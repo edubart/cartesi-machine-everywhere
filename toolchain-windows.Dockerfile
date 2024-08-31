@@ -37,6 +37,10 @@ patch -Np0 < add-generated-files.diff
 # feature/windows-virtio-9p (includes feature/optim-fetch)
 wget https://github.com/cartesi/machine-emulator/pull/242.patch
 patch -Np1 < 242.patch
+
+# fix/jsonrpc-machine-windows
+wget https://github.com/cartesi/machine-emulator/pull/269.patch
+patch -Np1 < 269.patch
 EOF
 
 # Build cartesi machine
@@ -45,6 +49,7 @@ set -e
 cd machine-emulator
 make -C src -j$(nproc) \
     libcartesi.dll libcartesi.a libluacartesi.a \
+    libcartesi_jsonrpc.dll libcartesi_jsonrpc.a libluacartesi_jsonrpc.a \
     TARGET_OS=Windows \
     SO_EXT=dll \
     CC=x86_64-w64-mingw32-gcc \
@@ -55,6 +60,7 @@ make -C src -j$(nproc) \
 make install-headers DESTDIR=pkg
 mkdir -p pkg/usr/lib/lua/5.4
 cp src/libcartesi.dll src/libcartesi.a src/libluacartesi.a pkg/usr/lib/
+cp src/libcartesi_jsonrpc.dll src/libcartesi_jsonrpc.a src/libluacartesi_jsonrpc.a pkg/usr/lib/
 cp /usr/x86_64-w64-mingw32/lib/libslirp.a pkg/usr/lib/
 x86_64-w64-mingw32-strip -S pkg/usr/lib/*.a
 x86_64-w64-mingw32-strip -S -x pkg/usr/lib/*.dll
@@ -71,9 +77,7 @@ make -C src/cli -j$(nproc) \
     CC=x86_64-w64-mingw32-gcc \
     CXX=x86_64-w64-mingw32-g++ \
     LDFLAGS= \
-    MYCFLAGS=-DNO_JSONRPC \
-    MYLDFLAGS="-static-libstdc++ -static-libgcc" \
-    CARTESI_LIBS="../libluacartesi.a ../libcartesi.a"
+    MYLDFLAGS="-static-libstdc++ -static-libgcc"
 mkdir -p pkg/usr/bin
 cp src/cli/cartesi-machine.exe pkg/usr/bin/
 x86_64-w64-mingw32-strip pkg/usr/bin/cartesi-machine.exe

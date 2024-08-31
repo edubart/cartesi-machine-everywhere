@@ -232,10 +232,8 @@ int main(int argc, char **argv) {
   luaL_openlibs(L);
   luaopen_cartesi(L);
   setpackageloaded(L, "cartesi");
-#ifndef NO_JSONRPC
   luaopen_cartesi_jsonrpc(L);
   setpackageloaded(L, "cartesi.jsonrpc");
-#endif
   // set "arg"
   createargtable(L, argv, argc);
   // load cartesi dep scripts
