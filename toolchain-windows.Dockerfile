@@ -23,6 +23,10 @@ wget -O /usr/x86_64-w64-mingw32/include/minilua.h https://raw.githubusercontent.
 echo '#include "minilua.h"' > /usr/x86_64-w64-mingw32/include/lualib.h
 echo '#include "minilua.h"' > /usr/x86_64-w64-mingw32/include/lauxlib.h
 echo '#include "minilua.h"' > /usr/x86_64-w64-mingw32/include/lua.h
+x86_64-w64-mingw32-gcc \
+    -o /usr/x86_64-w64-mingw32/lib/lua5.4.dll \
+    -x c /usr/x86_64-w64-mingw32/include/minilua.h \
+    -fPIC -O2 -DNDEBUG -DLUA_IMPL -DLUA_BUILD_AS_DLL -shared
 EOF
 
 # Download cartesi machine
@@ -43,6 +47,25 @@ wget https://github.com/cartesi/machine-emulator/pull/269.patch
 patch -Np1 < 269.patch
 EOF
 
+# Build cartesi machine Lua libraries
+RUN <<EOF
+set -e
+cd machine-emulator
+make -C src -j$(nproc) \
+    cartesi.so cartesi/jsonrpc.so \
+    TARGET_OS=Windows \
+    SO_EXT=dll \
+    CC=x86_64-w64-mingw32-gcc \
+    CXX=x86_64-w64-mingw32-g++ \
+    AR="x86_64-w64-mingw32-ar rcs" \
+    MYLDFLAGS="-static-libstdc++ -static-libgcc -lws2_32 -liphlpapi -llua5.4" \
+    LUA_INC= LUA_LIB=
+rm -f src/*.o src/*.a
+mkdir -p pkg/usr/lib/lua/5.4/cartesi
+cp src/cartesi.so pkg/usr/lib/lua/5.4/cartesi.dll
+cp src/cartesi/jsonrpc.so pkg/usr/lib/lua/5.4/cartesi/jsonrpc.dll
+EOF
+
 # Build cartesi machine
 RUN <<EOF
 set -e
@@ -58,7 +81,6 @@ make -C src -j$(nproc) \
     MYLDFLAGS="-static-libstdc++ -static-libgcc -lws2_32 -liphlpapi" \
     LUA_INC= LUA_LIB=
 make install-headers DESTDIR=pkg
-mkdir -p pkg/usr/lib/lua/5.4
 cp src/libcartesi.dll src/libcartesi.a src/libluacartesi.a pkg/usr/lib/
 cp src/libcartesi_jsonrpc.dll src/libcartesi_jsonrpc.a src/libluacartesi_jsonrpc.a pkg/usr/lib/
 cp /usr/x86_64-w64-mingw32/lib/libslirp.a pkg/usr/lib/
