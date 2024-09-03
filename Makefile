@@ -30,6 +30,8 @@ cartesi-machine-linux-glibc-%: toolchain-linux-glibc.Dockerfile cli/* $(LINUX_BI
 	cp $(LINUX_BIN) $(ROOTFS_EXT2) $@/share/cartesi-machine/images/
 	ln -s $(LINUX_BIN) $@/share/cartesi-machine/images/linux.bin
 	ln -s $(ROOTFS_EXT2) $@/share/cartesi-machine/images/rootfs.ext2
+	mkdir -p $@/share/licenses/cartesi-machine
+	cp COPYING $@/share/licenses/cartesi-machine/COPYING
 	tar cf - $@ | xz -z - > $@.tar.xz
 
 # Linux MUSL
@@ -44,6 +46,8 @@ cartesi-machine-linux-musl-%: toolchain-linux-musl.Dockerfile cli/* $(LINUX_BIN)
 	cp $(LINUX_BIN) $(ROOTFS_EXT2) $@/share/cartesi-machine/images/
 	ln -s $(LINUX_BIN) $@/share/cartesi-machine/images/linux.bin
 	ln -s $(ROOTFS_EXT2) $@/share/cartesi-machine/images/rootfs.ext2
+	mkdir -p $@/share/licenses/cartesi-machine
+	cp COPYING $@/share/licenses/cartesi-machine/COPYING
 	tar cf - $@ | xz -z - > $@.tar.xz
 
 # MacOS
@@ -60,6 +64,8 @@ cartesi-machine-macos-%: toolchain-macos.Dockerfile cli/* $(LINUX_BIN) $(ROOTFS_
 	cp $(LINUX_BIN) $(ROOTFS_EXT2) $@/share/cartesi-machine/images/
 	ln -s $(LINUX_BIN) $@/share/cartesi-machine/images/linux.bin
 	ln -s $(ROOTFS_EXT2) $@/share/cartesi-machine/images/rootfs.ext2
+	mkdir -p $@/share/licenses/cartesi-machine
+	cp COPYING $@/share/licenses/cartesi-machine/COPYING
 	tar cf - $@ | pigz -9 - > $@.tar.gz
 
 # Windows
@@ -73,6 +79,8 @@ cartesi-machine-windows-%: toolchain-windows.Dockerfile cli/* $(LINUX_BIN) $(ROO
 	mkdir -p $@/share/cartesi-machine/images
 	cp $(LINUX_BIN) $@/share/cartesi-machine/images/linux.bin
 	cp $(ROOTFS_EXT2) $@/share/cartesi-machine/images/rootfs.ext2
+	mkdir -p $@/share/licenses/cartesi-machine
+	cp COPYING $@/share/licenses/cartesi-machine/COPYING
 	zip -q9r $@.zip $@
 
 # WebAssembly
@@ -87,6 +95,8 @@ cartesi-machine-wasm: toolchain-wasm.Dockerfile cli/* $(LINUX_BIN) $(ROOTFS_EXT2
 	cp $(LINUX_BIN) $(ROOTFS_EXT2) $@/share/cartesi-machine/images/
 	ln -s $(LINUX_BIN) $@/share/cartesi-machine/images/linux.bin
 	ln -s $(ROOTFS_EXT2) $@/share/cartesi-machine/images/rootfs.ext2
+	mkdir -p $@/share/licenses/cartesi-machine
+	cp COPYING $@/share/licenses/cartesi-machine/COPYING
 	tar cf - $@ | xz -z - > $@.tar.xz
 
 clean:
