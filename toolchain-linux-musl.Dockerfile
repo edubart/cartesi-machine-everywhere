@@ -1,14 +1,14 @@
 FROM alpine:3.20
 
 RUN apk update && \
-    apk add git gcc g++ musl-dev patch make boost-dev xxd
+    apk add git gcc g++ musl-dev patch make boost-dev xxd patchelf
 
 # Install libslirp
 RUN <<EOF
 set -e
 git clone --branch v4.8.0-1 --depth 1 https://github.com/edubart/minislirp.git
 cd minislirp
-make -C src install
+make -C src -j$(nproc) install
 cd ..
 rm -r minislirp
 EOF
@@ -58,4 +58,11 @@ rm -r pkg/usr/share/lua pkg/usr/share/cartesi-machine/gdb \
     pkg/usr/bin/merkle-tree-hash
 cp src/cli/cartesi-machine pkg/usr/bin/
 strip pkg/usr/bin/cartesi-machine
+EOF
+
+# Fix missing MUSL libc in other distributions
+RUN <<EOF
+set -e
+find machine-emulator/pkg -name '*.so' -exec \
+    patchelf --replace-needed libc.musl-$(uname -m).so.1 /lib/ld-musl-$(uname -m).so.1 {} \;
 EOF
