@@ -11,6 +11,18 @@ The archives are designed to be dependency free, it will not much installed in y
 The goal is to make it easy for anyone to hack applications using the cartesi machine,
 no matter if you want to use just the cli, its C API, script with Lua, or build other statically linked binaries on top.
 
+## Platforms
+
+The following platforms are supported:
+
+| Platform          | amd64              | arm64              | riscv64            | wasm               |
+|-------------------|--------------------|--------------------|--------------------|--------------------|
+| Linux GLIBC 2.35+ | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | N/A                |
+| Linux MUSL        | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | N/A                |
+| MacOS             | :heavy_check_mark: | :heavy_check_mark: | N/A                | N/A                |
+| Windows           | :heavy_check_mark: | N/A                | N/A                | N/A                |
+| WebAssembly       | N/A                | N/A                | N/A                | :heavy_check_mark: |
+
 ## Archive contents
 
 Each archive provides the following binaries:
@@ -26,16 +38,6 @@ Each archive provides the following binaries:
 
 Although all these components could be split across archives,
 they are all provided in a single archive for convenience.
-
-## Platforms
-
-The following platforms are supported:
-
-- Linux GLIBC 2.35+ (amd64/arm64/riscv64)
-- Linux MUSL (amd64/arm64/riscv64)
-- MacOS (amd64/arm64)
-- Windows (amd64)
-- WebAssembly (so you can use in Web frontends with Emscripten)
 
 ### A note on Linux different flavors
 
@@ -61,8 +63,7 @@ Quick example of running `cartesi-machine` on any Linux amd64:
 
 ```sh
 wget https://github.com/edubart/cartesi-machine-everywhere/releases/latest/download/cartesi-machine-linux-musl-amd64.tar.xz
-tar xJf cartesi-machine-linux-musl-amd64.tar.xz
-cd cartesi-machine-linux-musl-amd64
+tar xJf cartesi-machine-linux-musl-amd64.tar.xz && cd cartesi-machine-linux-musl-amd64
 ./bin/cartesi-machine
 
          .
@@ -92,8 +93,7 @@ Example of Lua cartesi library usage on Linux GLIBC amd64:
 
 ```sh
 wget https://github.com/edubart/cartesi-machine-everywhere/releases/latest/download/cartesi-machine-linux-glibc-amd64.tar.xz
-tar xJf cartesi-machine-linux-glibc-amd64.tar.xz
-cd cartesi-machine-linux-glibc-amd64
+tar xJf cartesi-machine-linux-glibc-amd64.tar.xz && cd cartesi-machine-linux-glibc-amd64
 export LUA_CPATH_5_4="$(pwd)/lib/lua/5.4/?.so;;"
 lua5.4 -e 'print("cartesi-machine "..require("cartesi").VERSION)'
 cartesi-machine 0.18.1
@@ -107,12 +107,11 @@ cartesi-machine 0.18.1
 
 **Remarks:** For linking dynamically add `-lcartesi` linker flag, for linking statically add the full path to `lib/libcartesi.a` as a linker flag.
 
-Quick example of libcartesi C API usage on any Linux GLIBC amd64:
+Quick example of libcartesi C API usage on Linux GLIBC amd64:
 
 ```sh
 wget https://github.com/edubart/cartesi-machine-everywhere/releases/latest/download/cartesi-machine-linux-glibc-amd64.tar.xz
-tar xJf cartesi-machine-linux-glibc-amd64.tar.xz
-cd cartesi-machine-linux-glibc-amd64
+tar xJf cartesi-machine-linux-glibc-amd64.tar.xz && cd cartesi-machine-linux-glibc-amd64
 cat <<EOF > main.c
 #include <stdio.h>
 #include <cartesi-machine/machine-c-api.h>
@@ -120,17 +119,25 @@ int main() {
      printf("register x1 is at 0x%x\n", cm_get_x_address(1));
 }
 EOF
-gcc main.c -o main -I./include -L./lib -lcartesi
+gcc main.c -o main -Iinclude -Llib -lcartesi
 ./main
 register x1 is at 0x8
 ```
 
+In case you want to link libcartesi statically on Linux GLIBC amd64:
+```sh
+gcc main.c -o main -Iinclude -Llib -l:libcartesi.a -l:libslirp.a -l:libstdc++.a -lm -static-libgcc
+./main
+register x1 is at 0x8
+```
+
+NOTE: By linking statically you can make more portable ELF binaries to share with others.
+
 ## Patches
 
 At the moment this project does not use standard cartesi machine sources,
-it is based on cartesi machine v0.18.1 plus various patches to make this project possible:
+it is based on cartesi machine v0.18.1 plus some patches:
 
-- Makefile adjustments so this project can exist.
 - Add VirtIO support for Windows.
 - Instruction fetch optimization.
 
