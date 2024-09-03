@@ -13,7 +13,7 @@ make -C src install \
     PREFIX=/usr/x86_64-w64-mingw32 \
     CC=x86_64-w64-mingw32-gcc
 cd ..
-rm -rf minislirp
+rm -r minislirp
 EOF
 
 # Install lua
@@ -27,12 +27,18 @@ x86_64-w64-mingw32-gcc \
     -o /usr/x86_64-w64-mingw32/lib/lua5.4.dll \
     -x c /usr/x86_64-w64-mingw32/include/minilua.h \
     -fPIC -O2 -DNDEBUG -DLUA_IMPL -DLUA_BUILD_AS_DLL -shared
+x86_64-w64-mingw32-gcc -c \
+    -o lua.o \
+    -x c /usr/x86_64-w64-mingw32/include/minilua.h \
+    -fPIC -O2 -DNDEBUG -DLUA_IMPL
+ar rcs /usr/x86_64-w64-mingw32/lib/liblua.a lua.o
+rm lua.o
 EOF
 
 # Download cartesi machine
 RUN <<EOF
 set -e
-git clone --branch feature/portable-cli --depth 1 https://github.com/cartesi/machine-emulator.git
+git clone --branch feature/optim-fetch --depth 1 https://github.com/cartesi/machine-emulator.git
 cd machine-emulator
 make bundle-boost
 wget https://github.com/cartesi/machine-emulator/releases/download/v0.18.1/add-generated-files.diff
@@ -41,10 +47,6 @@ patch -Np0 < add-generated-files.diff
 # feature/windows-virtio-9p (includes feature/optim-fetch)
 wget https://github.com/cartesi/machine-emulator/pull/242.patch
 patch -Np1 < 242.patch
-
-# fix/jsonrpc-machine-windows
-wget https://github.com/cartesi/machine-emulator/pull/269.patch
-patch -Np1 < 269.patch
 EOF
 
 # Build cartesi machine Lua libraries
@@ -96,10 +98,8 @@ set -e
 cd machine-emulator
 make -C src/cli -j$(nproc) \
     TARGET_OS=Windows \
-    TARGET_LIBS="-lshlwapi -lws2_32 -liphlpapi" \
     CC=x86_64-w64-mingw32-gcc \
     CXX=x86_64-w64-mingw32-g++ \
-    LDFLAGS= \
     MYLDFLAGS="-static-libstdc++ -static-libgcc"
 mkdir -p pkg/usr/bin
 cp src/cli/cartesi-machine.exe pkg/usr/bin/

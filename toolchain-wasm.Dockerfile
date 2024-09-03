@@ -21,16 +21,11 @@ EOF
 # Download cartesi machine
 RUN <<EOF
 set -e
-git clone --branch feature/portable-cli --depth 1 https://github.com/cartesi/machine-emulator.git
+git clone --branch feature/optim-fetch --depth 1 https://github.com/cartesi/machine-emulator.git
 cd machine-emulator
 make bundle-boost
 wget https://github.com/cartesi/machine-emulator/releases/download/v0.18.1/add-generated-files.diff
 patch -Np0 < add-generated-files.diff
-
-# feature/optim-fetch
-wget https://github.com/cartesi/machine-emulator/pull/226.patch
-patch -Np1 < 226.patch
-
 EOF
 
 # Build cartesi machine

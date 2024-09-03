@@ -22,7 +22,7 @@ git clone --branch v4.8.0-1 --depth 1 https://github.com/edubart/minislirp.git
 cd minislirp
 make -C src install
 cd ..
-rm -rf minislirp
+rm -r minislirp
 EOF
 
 # Install lua
@@ -32,27 +32,19 @@ wget -O /usr/include/minilua.h https://raw.githubusercontent.com/edubart/minilua
 echo '#include "minilua.h"' > /usr/include/lualib.h
 echo '#include "minilua.h"' > /usr/include/lauxlib.h
 echo '#include "minilua.h"' > /usr/include/lua.h
-EOF
-
-# Install arc4random so we can avoid arc4random@GLIBC_2.36
-RUN <<EOF
-git clone --depth 1 https://github.com/opencoff/portable-lib.git
-gcc -c -fPIC -O2 -I./portable-lib/inc -o /usr/lib/arc4random.o portable-lib/src/arc4random.c
-rm -rf portable-lib
+gcc -c -o lua.o -x c /usr/include/minilua.h -O2 -fPIC -DNDEBUG -DLUA_IMPL
+ar rcs /usr/lib/liblua.a lua.o
+rm -f lua.o
 EOF
 
 # Download cartesi machine
 RUN <<EOF
 set -e
-git clone --branch feature/portable-cli --depth 1 https://github.com/cartesi/machine-emulator.git
+git clone --branch feature/optim-fetch --depth 1 https://github.com/cartesi/machine-emulator.git
 cd machine-emulator
 make bundle-boost
 wget https://github.com/cartesi/machine-emulator/releases/download/v0.18.1/add-generated-files.diff
 patch -Np0 < add-generated-files.diff
-
-# feature/optim-fetch
-wget https://github.com/cartesi/machine-emulator/pull/226.patch
-patch -Np1 < 226.patch
 EOF
 
 # Build cartesi machine
@@ -60,7 +52,7 @@ RUN <<EOF
 set -e
 cd machine-emulator
 make -C src -j$(nproc) \
-    MYLDFLAGS="-static-libstdc++ -static-libgcc /usr/lib/arc4random.o" \
+    MYLDFLAGS="-static-libstdc++ -static-libgcc" \
     LUA_INC= LUA_LIB=
 make install PREFIX=/usr DESTDIR=pkg
 cp /usr/local/lib/libslirp.a pkg/usr/lib/
@@ -72,7 +64,7 @@ RUN <<EOF
 set -e
 cd machine-emulator
 make -C src/cli -j$(nproc) \
-    MYLDFLAGS="-static-libstdc++ -static-libgcc /usr/lib/arc4random.o"
+    MYLDFLAGS="-static-libstdc++ -static-libgcc"
 rm -r pkg/usr/share/lua pkg/usr/share/cartesi-machine/gdb \
     pkg/usr/bin/cartesi-machine-stored-hash \
     pkg/usr/bin/merkle-tree-hash

@@ -20,7 +20,7 @@ make -C src install \
     MYCFLAGS="-include unistd.h" \
     PREFIX=/osxcross/SDK/MacOSX13.1.sdk/usr
 cd ..
-rm -rf minislirp
+rm -r minislirp
 EOF
 
 # Install lua
@@ -30,20 +30,19 @@ wget -O /osxcross/SDK/MacOSX13.1.sdk/usr/include/minilua.h https://raw.githubuse
 echo '#include "minilua.h"' > /osxcross/SDK/MacOSX13.1.sdk/usr/include/lualib.h
 echo '#include "minilua.h"' > /osxcross/SDK/MacOSX13.1.sdk/usr/include/lauxlib.h
 echo '#include "minilua.h"' > /osxcross/SDK/MacOSX13.1.sdk/usr/include/lua.h
+${CC_PREFIX}-clang -c -o lua.o -x c /osxcross/SDK/MacOSX13.1.sdk/usr/include/minilua.h -O2 -fPIC -DNDEBUG -DLUA_IMPL
+llvm-ar-18 rcs /osxcross/SDK/MacOSX13.1.sdk/usr/lib/liblua.a lua.o
+rm lua.o
 EOF
 
 # Install cartesi machine
 RUN <<EOF
 set -e
-git clone --branch feature/portable-cli --depth 1 https://github.com/cartesi/machine-emulator.git
+git clone --branch feature/optim-fetch --depth 1 https://github.com/cartesi/machine-emulator.git
 cd machine-emulator
 make bundle-boost
 wget https://github.com/cartesi/machine-emulator/releases/download/v0.18.1/add-generated-files.diff
 patch -Np0 < add-generated-files.diff
-
-# feature/optim-fetch
-wget https://github.com/cartesi/machine-emulator/pull/226.patch
-patch -Np1 < 226.patch
 EOF
 
 # Build cartesi machine
@@ -72,8 +71,7 @@ cd machine-emulator
 make -C src/cli -j$(nproc) \
     TARGET_OS=Darwin \
     CC=${CC_PREFIX}-clang \
-    CXX=${CC_PREFIX}-clang++ \
-    SLIRP_LIB="-lslirp -lresolv"
+    CXX=${CC_PREFIX}-clang++
 rm -r pkg/usr/share/lua pkg/usr/share/cartesi-machine/gdb \
     pkg/usr/bin/cartesi-machine-stored-hash \
     pkg/usr/bin/merkle-tree-hash

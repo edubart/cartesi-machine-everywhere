@@ -10,7 +10,7 @@ git clone --branch v4.8.0-1 --depth 1 https://github.com/edubart/minislirp.git
 cd minislirp
 make -C src install
 cd ..
-rm -rf minislirp
+rm -r minislirp
 EOF
 
 # Install lua
@@ -20,19 +20,18 @@ wget -O /usr/include/minilua.h https://raw.githubusercontent.com/edubart/minilua
 echo '#include "minilua.h"' > /usr/include/lualib.h
 echo '#include "minilua.h"' > /usr/include/lauxlib.h
 echo '#include "minilua.h"' > /usr/include/lua.h
+gcc -c -o lua.o -x c /usr/include/minilua.h -O2 -fPIC -DNDEBUG -DLUA_IMPL
+ar rcs /usr/lib/liblua.a lua.o
+rm lua.o
 EOF
 
 # Download cartesi machine
 RUN <<EOF
 set -e
-git clone --branch feature/portable-cli --depth 1 https://github.com/cartesi/machine-emulator.git
+git clone --branch feature/optim-fetch --depth 1 https://github.com/cartesi/machine-emulator.git
 cd machine-emulator
 wget https://github.com/cartesi/machine-emulator/releases/download/v0.18.1/add-generated-files.diff
 patch -Np0 < add-generated-files.diff
-
-# feature/optim-fetch
-wget https://github.com/cartesi/machine-emulator/pull/226.patch
-patch -Np1 < 226.patch
 EOF
 
 # Build cartesi machine

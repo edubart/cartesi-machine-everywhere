@@ -1,31 +1,35 @@
 CFLAGS=-O2 -fPIC -DNDEBUG
 TARGET_OS?=$(shell uname)
 CARTESI_LIBS=../libluacartesi.a ../libluacartesi_jsonrpc.a ../libcartesi.a ../libcartesi_jsonrpc.a
-EXE=cartesi-machine
+LUA_LIB=-llua
+SLIRP_LIB=-lslirp
 
 ifeq ($(TARGET_OS),Darwin)
 CC=clang
 CXX=clang++
 LDFLAGS=-Wl,-export_dynamic
-TARGET_LIBS=
-SLIRP_LIB=-lslirp
+TARGET_LIBS=-lresolv
+EXE=cartesi-machine
+else ifeq ($(TARGET_OS),Windows)
+CC=x86_64-w64-mingw32-gcc
+CXX=x86_64-w64-mingw32-g++
+LDFLAGS=
+TARGET_LIBS=-lws2_32 -liphlpapi -lshlwapi
+EXE=cartesi-machine.exe
 else
 CC=gcc
 CXX=g++
 LDFLAGS=-Wl,--export-dynamic
 TARGET_LIBS=-lm
-SLIRP_LIB=-lslirp
+EXE=cartesi-machine
 endif
 
-LIBS=$(CARTESI_LIBS) $(SLIRP_LIB) $(TARGET_LIBS)
+LIBS=$(CARTESI_LIBS) $(LUA_LIB) $(SLIRP_LIB) $(TARGET_LIBS)
 
 all: $(EXE)
 
-$(EXE): cartesi-machine.cpp lua.o cartesi-machine.lua.h cartesi-proof.lua.h cartesi-gdbstub.lua.h cartesi-util.lua.h
-	$(CXX) $< -o $@ lua.o $(CFLAGS) $(MYCFLAGS) $(LIBS) $(MYLIBS) $(LDFLAGS) $(MYLDFLAGS)
-
-lua.o: lua.c
-	$(CC) -c $< -o $@ $(CFLAGS) $(MYCFLAGS)
+$(EXE): cartesi-machine.cpp cartesi-machine.lua.h cartesi-proof.lua.h cartesi-gdbstub.lua.h cartesi-util.lua.h
+	$(CXX) $< -o $@ $(CFLAGS) $(MYCFLAGS) $(LIBS) $(MYLIBS) $(LDFLAGS) $(MYLDFLAGS)
 
 cartesi-machine.lua.h: ../cartesi-machine.lua
 	rm -f cartesi-machine.lua
