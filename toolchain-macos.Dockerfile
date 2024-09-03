@@ -14,7 +14,7 @@ RUN <<EOF
 set -e
 git clone --branch v4.8.0-1 --depth 1 https://github.com/edubart/minislirp.git
 cd minislirp
-make -C src install \
+make -C src -j$(nproc) install \
     CC=${CC_PREFIX}-clang \
     AR="llvm-ar-18 rcs" \
     MYCFLAGS="-include unistd.h" \
