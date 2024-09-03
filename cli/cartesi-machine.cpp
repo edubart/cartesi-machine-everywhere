@@ -17,7 +17,6 @@
 #include <windows.h>
 #include <shlwapi.h>
 #define PATH_SEP "\\"
-#define JOIN_IMAGES_PATH "/../share/cartesi-machine/images"
 int setenv(const char *name, const char *value, int overwrite) {
   if (getenv(name)) {
     return -1;
