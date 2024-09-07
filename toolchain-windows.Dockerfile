@@ -11,7 +11,8 @@ git clone --branch v4.8.0-1 --depth 1 https://github.com/edubart/minislirp.git
 cd minislirp
 make -C src -j$(nproc) install \
     PREFIX=/usr/x86_64-w64-mingw32 \
-    CC=x86_64-w64-mingw32-gcc
+    CC=x86_64-w64-mingw32-gcc \
+    AR="x86_64-w64-mingw32-ar rcs"
 cd ..
 rm -r minislirp
 EOF
@@ -53,8 +54,7 @@ EOF
 RUN <<EOF
 set -e
 cd machine-emulator
-make -C src -j$(nproc) \
-    cartesi.so cartesi/jsonrpc.so \
+make -C src -j$(nproc) cartesi.so cartesi/jsonrpc.so \
     TARGET_OS=Windows \
     SO_EXT=dll \
     CC=x86_64-w64-mingw32-gcc \

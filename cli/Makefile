@@ -1,6 +1,7 @@
 CFLAGS=-O2 -fPIC -DNDEBUG
 TARGET_OS?=$(shell uname)
-CARTESI_LIBS=../libluacartesi.a ../libluacartesi_jsonrpc.a ../libcartesi.a ../libcartesi_jsonrpc.a
+CARTESI_LIBS=../libluacartesi.a ../libcartesi.a
+CARTESI_JSONRPC_LIBS=../libluacartesi_jsonrpc.a ../libcartesi_jsonrpc.a
 LUA_LIB=-llua
 SLIRP_LIB=-lslirp
 
@@ -24,7 +25,7 @@ TARGET_LIBS=-lm
 EXE=cartesi-machine
 endif
 
-LIBS=$(CARTESI_LIBS) $(LUA_LIB) $(SLIRP_LIB) $(TARGET_LIBS)
+LIBS=$(CARTESI_LIBS) $(CARTESI_JSONRPC_LIBS) $(LUA_LIB) $(SLIRP_LIB) $(TARGET_LIBS)
 
 all: $(EXE)
 

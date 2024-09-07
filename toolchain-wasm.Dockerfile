@@ -33,8 +33,7 @@ RUN <<EOF
 set -e
 source /etc/profile.d/emscripten.sh
 cd machine-emulator
-make -C src -j$(nproc) \
-    libcartesi.a \
+make -C src -j$(nproc) libcartesi.a \
     SO_EXT=wasm \
     CC=emcc \
     CXX=em++ \

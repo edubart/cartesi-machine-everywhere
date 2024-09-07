@@ -39,7 +39,9 @@ char *dirname(char *path) {
 #endif
 
 extern "C" int luaopen_cartesi(lua_State *L);
+#ifndef NO_CARTESI_JSONRPC
 extern "C" int luaopen_cartesi_jsonrpc(lua_State *L);
+#endif
 
 static lua_State *globalL = NULL;
 
@@ -231,8 +233,10 @@ int main(int argc, char **argv) {
   luaL_openlibs(L);
   luaopen_cartesi(L);
   setpackageloaded(L, "cartesi");
+#ifndef NO_CARTESI_JSONRPC
   luaopen_cartesi_jsonrpc(L);
   setpackageloaded(L, "cartesi.jsonrpc");
+#endif
   // set "arg"
   createargtable(L, argv, argc);
   // load cartesi dep scripts

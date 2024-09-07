@@ -4,7 +4,7 @@ LINUX_VER=6.5.13-ctsi-1-$(KERNEL_VER)
 LINUX_BIN=linux-$(LINUX_VER).bin
 ROOTFS_EXT2=rootfs-tools-$(ROOTFS_VER).ext2
 
-all: linux macos windows wasm
+all: linux macos windows wasm cosmopolitan
 
 $(LINUX_BIN):
 	wget -O $@ https://github.com/cartesi/image-kernel/releases/download/$(KERNEL_VER)/$@
@@ -17,6 +17,7 @@ linux-musl: cartesi-machine-linux-musl-amd64 cartesi-machine-linux-musl-arm64 ca
 macos: cartesi-machine-macos-amd64 cartesi-machine-macos-arm64
 windows: cartesi-machine-windows-amd64
 wasm: cartesi-machine-wasm
+cosmopolitan: cartesi-machine-portable
 
 # Linux GLIBC
 cartesi-machine-linux-glibc-%: toolchain-linux-glibc.Dockerfile cli/* $(LINUX_BIN) $(ROOTFS_EXT2)
@@ -85,6 +86,22 @@ cartesi-machine-windows-%: toolchain-windows.Dockerfile cli/* $(LINUX_BIN) $(ROO
 
 # WebAssembly
 cartesi-machine-wasm: toolchain-wasm.Dockerfile cli/* $(LINUX_BIN) $(ROOTFS_EXT2)
+	rm -rf $@ $@.tar.xz
+	docker build --tag cmdist/toolchain-$@ --file $< --progress plain .
+	docker create --name cmdist-$@-copy cmdist/toolchain-$@
+	docker cp cmdist-$@-copy:/machine-emulator/pkg/usr $@
+	docker rm cmdist-$@-copy
+	mkdir -p $@/share/cartesi-machine/images
+	touch $@
+	cp $(LINUX_BIN) $(ROOTFS_EXT2) $@/share/cartesi-machine/images/
+	ln -s $(LINUX_BIN) $@/share/cartesi-machine/images/linux.bin
+	ln -s $(ROOTFS_EXT2) $@/share/cartesi-machine/images/rootfs.ext2
+	mkdir -p $@/share/licenses/cartesi-machine
+	cp COPYING $@/share/licenses/cartesi-machine/COPYING
+	tar cf - $@ | xz -z - > $@.tar.xz
+
+# Cosmopolitan
+cartesi-machine-portable: toolchain-cosmopolitan.Dockerfile cli/* $(LINUX_BIN) $(ROOTFS_EXT2)
 	rm -rf $@ $@.tar.xz
 	docker build --tag cmdist/toolchain-$@ --file $< --progress plain .
 	docker create --name cmdist-$@-copy cmdist/toolchain-$@
