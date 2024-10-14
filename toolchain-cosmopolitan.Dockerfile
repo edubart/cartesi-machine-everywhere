@@ -9,8 +9,8 @@ wget -O /usr/bin/ape https://cosmo.zip/pub/cosmos/bin/ape-$(uname -m).elf
 chmod +x /usr/bin/ape
 mkdir -p cosmocc
 cd cosmocc
-wget https://github.com/jart/cosmopolitan/releases/download/3.8.0/cosmocc-3.8.0.zip
-unzip cosmocc-3.8.0.zip
+wget https://github.com/jart/cosmopolitan/releases/download/3.9.4/cosmocc-3.9.4.zip
+unzip cosmocc-3.9.4.zip
 EOF
 
 ENV PATH=$PATH:/cosmocc/bin
@@ -18,7 +18,7 @@ ENV PATH=$PATH:/cosmocc/bin
 # Install libslirp
 RUN <<EOF
 set -e
-git clone --branch v4.8.0-1 --depth 1 https://github.com/edubart/minislirp.git
+git clone --branch v4.8.0-2 --depth 1 https://github.com/edubart/minislirp.git
 cd minislirp
 sed -i 's|if_nametoindex|0,|' src/slirp.c
 make -C src install \
@@ -46,23 +46,33 @@ EOF
 # Download cartesi machine
 RUN <<EOF
 set -e
-git clone --branch feature/optim-fetch --depth 1 https://github.com/cartesi/machine-emulator.git
+git clone --branch refactor/c-api --depth 1 https://github.com/cartesi/machine-emulator.git
 cd machine-emulator
 make bundle-boost
+EOF
+
+# Patch cartesi machine
+RUN <<EOF
+set -e
+cd machine-emulator
+
+# uarch files
 wget https://github.com/cartesi/machine-emulator/releases/download/v0.18.1/add-generated-files.diff
 patch -Np0 < add-generated-files.diff
 
-
-# feature/windows-virtio-9p (includes feature/optim-fetch)
+# feature/windows-virtio-9p
 wget https://github.com/cartesi/machine-emulator/pull/242.patch
 patch -Np1 < 242.patch
+
+# feature/optim-fetch
+wget https://github.com/cartesi/machine-emulator/pull/226.patch
+patch -Np1 < 226.patch
 EOF
 
 # Build cartesi machine
 RUN <<EOF
 set -e
 cd machine-emulator
-sed -i 's|#include <sys/sysmacros.h>|extern "C"{\n#include <sys/sysmacros.h>\n}|' src/virtio-p9fs.cpp
 make -C src -j$(nproc) libcartesi.a libluacartesi.a \
     CC=cosmocc \
     CXX=cosmoc++ \

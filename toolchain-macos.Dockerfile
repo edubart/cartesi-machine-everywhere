@@ -12,7 +12,7 @@ ENV MACOSX_DEPLOYMENT_TARGET=13.1
 # Install libslirp
 RUN <<EOF
 set -e
-git clone --branch v4.8.0-1 --depth 1 https://github.com/edubart/minislirp.git
+git clone --branch v4.8.0-2 --depth 1 https://github.com/edubart/minislirp.git
 cd minislirp
 make -C src -j$(nproc) install \
     CC=${CC_PREFIX}-clang \
@@ -35,14 +35,30 @@ llvm-ar-18 rcs /osxcross/SDK/MacOSX13.1.sdk/usr/lib/liblua.a lua.o
 rm lua.o
 EOF
 
-# Install cartesi machine
+# Download cartesi machine
 RUN <<EOF
 set -e
-git clone --branch feature/optim-fetch --depth 1 https://github.com/cartesi/machine-emulator.git
+git clone --branch refactor/c-api --depth 1 https://github.com/cartesi/machine-emulator.git
 cd machine-emulator
 make bundle-boost
+EOF
+
+# Patch cartesi machine
+RUN <<EOF
+set -e
+cd machine-emulator
+
+# uarch files
 wget https://github.com/cartesi/machine-emulator/releases/download/v0.18.1/add-generated-files.diff
 patch -Np0 < add-generated-files.diff
+
+# feature/windows-virtio-9p
+wget https://github.com/cartesi/machine-emulator/pull/242.patch
+patch -Np1 < 242.patch
+
+# feature/optim-fetch
+wget https://github.com/cartesi/machine-emulator/pull/226.patch
+patch -Np1 < 226.patch
 EOF
 
 # Build cartesi machine
