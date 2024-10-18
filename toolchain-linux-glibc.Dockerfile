@@ -40,7 +40,8 @@ EOF
 # Download cartesi machine
 RUN <<EOF
 set -e
-git clone --branch refactor/c-api --depth 1 https://github.com/cartesi/machine-emulator.git
+echo bump2
+git clone --branch edubart --depth 1 https://github.com/cartesi/machine-emulator.git
 cd machine-emulator
 make bundle-boost
 EOF
@@ -54,13 +55,13 @@ cd machine-emulator
 wget https://github.com/cartesi/machine-emulator/releases/download/v0.18.1/add-generated-files.diff
 patch -Np0 < add-generated-files.diff
 
-# feature/windows-virtio-9p
-wget https://github.com/cartesi/machine-emulator/pull/242.patch
-patch -Np1 < 242.patch
+# # feature/windows-virtio-9p
+# wget https://github.com/cartesi/machine-emulator/pull/242.patch
+# patch -Np1 < 242.patch
 
-# feature/optim-fetch
-wget https://github.com/cartesi/machine-emulator/pull/226.patch
-patch -Np1 < 226.patch
+# # feature/optim-fetch
+# wget https://github.com/cartesi/machine-emulator/pull/226.patch
+# patch -Np1 < 226.patch
 EOF
 
 # Build cartesi machine
