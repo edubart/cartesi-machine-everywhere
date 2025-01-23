@@ -1,7 +1,8 @@
-FROM alpine:3.20
+FROM alpine:3.21
 
 RUN apk update && \
-    apk add git patch make xxd unzip
+    apk upgrade && \
+    apk add git patch make xxd unzip lua5.4
 
 # Install cosmopolitan
 RUN <<EOF
@@ -9,8 +10,8 @@ wget -O /usr/bin/ape https://cosmo.zip/pub/cosmos/bin/ape-$(uname -m).elf
 chmod +x /usr/bin/ape
 mkdir -p cosmocc
 cd cosmocc
-wget https://github.com/jart/cosmopolitan/releases/download/3.9.4/cosmocc-3.9.4.zip
-unzip cosmocc-3.9.4.zip
+wget https://github.com/jart/cosmopolitan/releases/download/4.0.2/cosmocc-4.0.2.zip
+unzip cosmocc-4.0.2.zip
 EOF
 
 ENV PATH=$PATH:/cosmocc/bin
@@ -46,8 +47,7 @@ EOF
 # Download cartesi machine
 RUN <<EOF
 set -e
-echo bump2
-git clone --branch edubart --depth 1 https://github.com/cartesi/machine-emulator.git
+git clone --branch refactor/new-readme --depth 1 https://github.com/cartesi/machine-emulator.git
 cd machine-emulator
 make bundle-boost
 EOF
@@ -58,16 +58,8 @@ set -e
 cd machine-emulator
 
 # uarch files
-wget https://github.com/cartesi/machine-emulator/releases/download/v0.18.1/add-generated-files.diff
-patch -Np0 < add-generated-files.diff
-
-# # feature/windows-virtio-9p
-# wget https://github.com/cartesi/machine-emulator/pull/242.patch
-# patch -Np1 < 242.patch
-
-# # feature/optim-fetch
-# wget https://github.com/cartesi/machine-emulator/pull/226.patch
-# patch -Np1 < 226.patch
+wget https://github.com/cartesi/machine-emulator/releases/download/v0.19.0-test1/add-generated-files.diff
+patch -Np1 < add-generated-files.diff
 EOF
 
 # Build cartesi machine

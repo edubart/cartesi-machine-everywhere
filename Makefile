@@ -1,4 +1,4 @@
-ROOTFS_VER=v0.16.1
+ROOTFS_VER=v0.17.0-test2
 KERNEL_VER=v0.20.0
 LINUX_VER=6.5.13-ctsi-1-$(KERNEL_VER)
 LINUX_BIN=linux-$(LINUX_VER).bin
@@ -7,9 +7,9 @@ ROOTFS_EXT2=rootfs-tools-$(ROOTFS_VER).ext2
 all: linux macos windows wasm cosmopolitan
 
 $(LINUX_BIN):
-	wget -O $@ https://github.com/cartesi/image-kernel/releases/download/$(KERNEL_VER)/$@
+	wget -O $@ https://github.com/cartesi/machine-linux-image/releases/download/$(KERNEL_VER)/$@
 $(ROOTFS_EXT2):
-	wget -O $@ https://github.com/cartesi/machine-emulator-tools/releases/download/$(ROOTFS_VER)/$@
+	wget -O $@ https://github.com/cartesi/machine-guest-tools/releases/download/$(ROOTFS_VER)/$@
 
 linux: linux-glibc linux-musl
 linux-glibc: cartesi-machine-linux-glibc-amd64 cartesi-machine-linux-glibc-arm64 cartesi-machine-linux-glibc-riscv64

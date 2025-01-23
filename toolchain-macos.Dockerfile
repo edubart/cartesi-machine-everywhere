@@ -2,7 +2,7 @@ FROM crazymax/osxcross:13.1-ubuntu AS osxcross
 
 FROM ubuntu:24.04
 RUN apt-get update && \
-    apt-get install -y clang lld libc6-dev build-essential git wget xxd
+    apt-get install -y clang lld libc6-dev build-essential git wget xxd lua5.4
 COPY --from=osxcross /osxcross /osxcross
 ARG CC_PREFIX
 ENV PATH="/osxcross/bin:$PATH"
@@ -38,8 +38,7 @@ EOF
 # Download cartesi machine
 RUN <<EOF
 set -e
-echo bump2
-git clone --branch edubart --depth 1 https://github.com/cartesi/machine-emulator.git
+git clone --branch refactor/new-readme --depth 1 https://github.com/cartesi/machine-emulator.git
 cd machine-emulator
 make bundle-boost
 EOF
@@ -50,16 +49,8 @@ set -e
 cd machine-emulator
 
 # uarch files
-wget https://github.com/cartesi/machine-emulator/releases/download/v0.18.1/add-generated-files.diff
-patch -Np0 < add-generated-files.diff
-
-# # feature/windows-virtio-9p
-# wget https://github.com/cartesi/machine-emulator/pull/242.patch
-# patch -Np1 < 242.patch
-
-# # feature/optim-fetch
-# wget https://github.com/cartesi/machine-emulator/pull/226.patch
-# patch -Np1 < 226.patch
+wget https://github.com/cartesi/machine-emulator/releases/download/v0.19.0-test1/add-generated-files.diff
+patch -Np1 < add-generated-files.diff
 EOF
 
 # Build cartesi machine

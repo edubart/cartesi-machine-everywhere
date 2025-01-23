@@ -1,7 +1,8 @@
-FROM alpine:3.20
+FROM alpine:3.21
 
 RUN apk update && \
-    apk add git gcc g++ musl-dev patch make boost-dev xxd patchelf
+    apk upgrade && \
+    apk add git gcc g++ musl-dev patch make boost-dev xxd patchelf lua5.4
 
 # Install libslirp
 RUN <<EOF
@@ -28,8 +29,7 @@ EOF
 # Download cartesi machine
 RUN <<EOF
 set -e
-echo bump2
-git clone --branch edubart --depth 1 https://github.com/cartesi/machine-emulator.git
+git clone --branch refactor/new-readme --depth 1 https://github.com/cartesi/machine-emulator.git
 cd machine-emulator
 EOF
 
@@ -39,16 +39,8 @@ set -e
 cd machine-emulator
 
 # uarch files
-wget https://github.com/cartesi/machine-emulator/releases/download/v0.18.1/add-generated-files.diff
-patch -Np0 < add-generated-files.diff
-
-# # feature/windows-virtio-9p
-# wget https://github.com/cartesi/machine-emulator/pull/242.patch
-# patch -Np1 < 242.patch
-
-# # feature/optim-fetch
-# wget https://github.com/cartesi/machine-emulator/pull/226.patch
-# patch -Np1 < 226.patch
+wget https://github.com/cartesi/machine-emulator/releases/download/v0.19.0-test1/add-generated-files.diff
+patch -Np1 < add-generated-files.diff
 EOF
 
 # Build cartesi machine

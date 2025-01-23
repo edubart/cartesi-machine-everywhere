@@ -2,7 +2,7 @@ FROM archlinux:base-devel
 
 # Install build tools
 RUN pacman -Syyu --noconfirm && \
-    pacman -S --noconfirm git wget vim mingw-w64-toolchain
+    pacman -S --noconfirm git wget vim mingw-w64-toolchain lua
 
 # Install libslirp
 RUN <<EOF
@@ -39,8 +39,7 @@ EOF
 # Download cartesi machine
 RUN <<EOF
 set -e
-echo bump2
-git clone  --branch edubart --depth 1 https://github.com/cartesi/machine-emulator.git
+git clone --branch refactor/new-readme --depth 1 https://github.com/cartesi/machine-emulator.git
 cd machine-emulator
 make bundle-boost
 EOF
@@ -51,16 +50,8 @@ set -e
 cd machine-emulator
 
 # uarch files
-wget https://github.com/cartesi/machine-emulator/releases/download/v0.18.1/add-generated-files.diff
-patch -Np0 < add-generated-files.diff
-
-# # feature/windows-virtio-9p
-# wget https://github.com/cartesi/machine-emulator/pull/242.patch
-# patch -Np1 < 242.patch
-
-# # feature/optim-fetch
-# wget https://github.com/cartesi/machine-emulator/pull/226.patch
-# patch -Np1 < 226.patch
+wget https://github.com/cartesi/machine-emulator/releases/download/v0.19.0-test1/add-generated-files.diff
+patch -Np1 < add-generated-files.diff
 EOF
 
 # Build cartesi machine Lua libraries
